@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using BaseModule.Helper.ConvertFrom;
+using BaseModule.Helper;
 namespace XOR运算符
 {
     public partial class Form2 : Form
@@ -15,6 +15,7 @@ namespace XOR运算符
         public Form2()
         {
             InitializeComponent();
+            QueryToTable();
         }
         public const string PATTERN = @"([^A-Fa-f0-9]|\s+?)+";
         /// <summary>
@@ -26,7 +27,7 @@ namespace XOR运算符
         {
             return System.Text.RegularExpressions.Regex.IsMatch(hex, PATTERN);
         }
-        private void button1_Click(object sender, EventArgs e)
+        private unsafe void button1_Click(object sender, EventArgs e)
         {
             try
             {
@@ -42,10 +43,19 @@ namespace XOR运算符
                     }
                     CRC16 cRC16 = new CRC16();
                     uint tt = cRC16.calc_crc16(af.ToArray(), af.Count);
-                    byte[] bytes = BitConverter.GetBytes(tt);
 
-                    string Result = ConvertFrom.ToHexString(bytes);
-                    textBox2.Text = textBox1.Text + " " + Result.Substring(0,2) + " " + Result.Substring(3,2) + " " + "AA";
+                    //用指针的方式获取 uint 的字节数组
+                    List<byte> plist = new List<byte>();
+                    byte* Pbyte = (byte*)&tt;
+                    for (int i = 0; i < sizeof(uint); ++i)
+                    {
+                        plist.Add(*Pbyte);
+                        //增加指针
+                         Pbyte++;
+                    }
+                    textBox2.Text = textBox1.Text + " " + string.Format("{0:X2} {1:X2}", plist[0], plist[1]) + " " + "AA";
+                    //byte[] bytes = BitConverter.GetBytes(tt);
+                    //string Result = ConvertFrom.ToHexString(plist.ToArray());
                 }
                 else
                 {
@@ -59,6 +69,45 @@ namespace XOR运算符
 
 
          
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            RS232Data rS232Data = new RS232Data();
+            rS232Data.Description = textBox4.Text;
+            rS232Data.TextData = textBox2.Text;
+            rS232Data.Select = false;
+            
+            if (OLEDBHelper.InsertEntity(rS232Data))
+            {
+                button2.BackColor = Color.Green;
+            }
+            else
+            {
+                button2.BackColor = Color.Red;
+            }
+            QueryToTable();
+
+        }
+
+        private void QueryToTable()
+        {
+            dataGridView1.Rows.Clear();
+            var datas = OLEDBHelper.GetEntitylist<RS232Data>();
+            foreach (var item in datas)
+            {
+                dataGridView1.Rows.Add(item.id, item.Select, item.Description, item.TextData);
+            }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            QueryToTable();
         }
     }
 }
