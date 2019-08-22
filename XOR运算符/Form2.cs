@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BaseModule.Helper;
+using AbstractEquipment.RS232Equipment;
+using System.IO.Ports;
+using BaseModule.Helper.ConvertFrom;
+using System.Configuration;
 namespace XOR运算符
 {
     public partial class Form2 : Form
@@ -33,7 +37,7 @@ namespace XOR运算符
             {
                 if (IsIllegalHexadecimal(textBox1.Text))
                 {
-                   
+
                     List<byte> af = new List<byte>();
                     string[] arraychar = textBox1.Text.Split(' ');
                     for (int i = 0; i < arraychar.Length; i++)
@@ -46,14 +50,15 @@ namespace XOR运算符
 
                     //用指针的方式获取 uint 的字节数组
                     List<byte> plist = new List<byte>();
+                   
                     byte* Pbyte = (byte*)&tt;
                     for (int i = 0; i < sizeof(uint); ++i)
                     {
                         plist.Add(*Pbyte);
-                        //增加指针
-                         Pbyte++;
+                        Pbyte++;
                     }
                     textBox2.Text = textBox1.Text + " " + string.Format("{0:X2} {1:X2}", plist[0], plist[1]) + " " + "AA";
+                    write(textBox2.Text);
                     //byte[] bytes = BitConverter.GetBytes(tt);
                     //string Result = ConvertFrom.ToHexString(plist.ToArray());
                 }
@@ -68,7 +73,7 @@ namespace XOR运算符
             }
 
 
-         
+
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -77,7 +82,7 @@ namespace XOR运算符
             rS232Data.Description = textBox4.Text;
             rS232Data.TextData = textBox2.Text;
             rS232Data.Select = false;
-            
+
             if (OLEDBHelper.InsertEntity(rS232Data))
             {
                 button2.BackColor = Color.Green;
@@ -108,6 +113,72 @@ namespace XOR运算符
         private void button3_Click(object sender, EventArgs e)
         {
             QueryToTable();
+        }
+      
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            //点击button按钮事件
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Column3" && e.RowIndex >= 0)
+            { 
+                int rowindex = dataGridView1.CurrentCell.RowIndex;
+                object obj = dataGridView1.Rows[rowindex].Cells[3].Value;
+                write(obj.ToString());
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            InitSP();
+            
+        }
+        static string spCOM = ConfigurationManager.AppSettings[0];
+        SerialPort mySerialPort = new SerialPort(spCOM);
+        public SerialPort InitSP()
+        {
+         
+            mySerialPort.BaudRate = 115200;
+            mySerialPort.Parity = Parity.None;
+            mySerialPort.StopBits = StopBits.One;
+            mySerialPort.DataBits = 8;
+            mySerialPort.DataReceived += MySerialPort_DataReceived;
+            mySerialPort.DiscardNull = false;
+            if (!mySerialPort.IsOpen)
+            {
+                mySerialPort.Open();
+            }
+            else
+            {
+                mySerialPort.Close();
+            }
+            return mySerialPort;
+        }
+
+        public void write(string data)
+        {
+            if (mySerialPort.IsOpen)
+            {
+                List<byte> bytelist = ConvertFrom.HexstringToBytesArray(data);
+                mySerialPort.Write(bytelist.ToArray(), 0, bytelist.Count);
+            }
+            else
+            {
+                MessageBox.Show("串口未打开！");
+            }
+        }
+        private void MySerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (mySerialPort.IsOpen)
+            {
+                int tempdatalenth = mySerialPort.BytesToRead;
+                byte[] tempbytes = new byte[tempdatalenth];
+                mySerialPort.Read(tempbytes, 0, tempdatalenth);
+                textBox3.Invoke(new Action(() => { textBox3.Text += ConvertFrom.ToHexString(tempbytes);textBox3.Text += "\r\n"; }));
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            textBox3.Text = "";
         }
     }
 }
