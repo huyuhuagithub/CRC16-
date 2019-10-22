@@ -19,7 +19,7 @@ namespace XOR运算符
         SerialPort mySerialPort = new SerialPort(spCOM);
         List<string> strlist = new List<string>();
         byte[] tempbytes;
-        
+        int t;
         public event Action<string> showMessageEvent;
 
         public bool InitSP()
