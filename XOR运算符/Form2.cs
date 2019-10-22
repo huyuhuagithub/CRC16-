@@ -12,6 +12,8 @@ using AbstractEquipment.RS232Equipment;
 using System.IO.Ports;
 using BaseModule.Helper.ConvertFrom;
 using System.Configuration;
+using System.Threading;
+
 namespace XOR运算符
 {
     public partial class Form2 : Form
@@ -21,6 +23,7 @@ namespace XOR运算符
             InitializeComponent();
             QueryToTable();
         }
+        SP skdsp = new SP();
         public const string PATTERN = @"([^A-Fa-f0-9]|\s+?)+";
         /// <summary>
         /// 判断十六进制字符串hex是否正确
@@ -50,7 +53,6 @@ namespace XOR运算符
 
                     //用指针的方式获取 uint 的字节数组
                     List<byte> plist = new List<byte>();
-                   
                     byte* Pbyte = (byte*)&tt;
                     for (int i = 0; i < sizeof(uint); ++i)
                     {
@@ -58,7 +60,7 @@ namespace XOR运算符
                         Pbyte++;
                     }
                     textBox2.Text = textBox1.Text + " " + string.Format("{0:X2} {1:X2}", plist[0], plist[1]) + " " + "AA";
-                    write(textBox2.Text);
+                    skdsp.writesp(textBox2.Text);
                     //byte[] bytes = BitConverter.GetBytes(tt);
                     //string Result = ConvertFrom.ToHexString(plist.ToArray());
                 }
@@ -71,9 +73,6 @@ namespace XOR运算符
             {
                 MessageBox.Show(es.Message);
             }
-
-
-
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -105,10 +104,6 @@ namespace XOR运算符
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
 
         private void button3_Click(object sender, EventArgs e)
         {
@@ -122,63 +117,37 @@ namespace XOR运算符
             { 
                 int rowindex = dataGridView1.CurrentCell.RowIndex;
                 object obj = dataGridView1.Rows[rowindex].Cells[3].Value;
-                write(obj.ToString());
+                skdsp.writesp(obj.ToString());
             }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            InitSP();
+
+            if (skdsp.InitSP())
+            {
+                button4.Text = "串口已打开";
+                button4.BackColor = Color.Green;
+            }
+            else
+            {
+                button4.Text = "串口已关闭";
+                button4.BackColor = Color.Red;
+            }
+            skdsp.showMessageEvent += Skdsp_showMessageEvent;
+            
             
         }
-        static string spCOM = ConfigurationManager.AppSettings[0];
-        SerialPort mySerialPort = new SerialPort(spCOM);
-        public SerialPort InitSP()
-        {
-         
-            mySerialPort.BaudRate = 115200;
-            mySerialPort.Parity = Parity.None;
-            mySerialPort.StopBits = StopBits.One;
-            mySerialPort.DataBits = 8;
-            mySerialPort.DataReceived += MySerialPort_DataReceived;
-            mySerialPort.DiscardNull = false;
-            if (!mySerialPort.IsOpen)
-            {
-                mySerialPort.Open();
-            }
-            else
-            {
-                mySerialPort.Close();
-            }
-            return mySerialPort;
-        }
 
-        public void write(string data)
+        private void Skdsp_showMessageEvent(string obj)
         {
-            if (mySerialPort.IsOpen)
-            {
-                List<byte> bytelist = ConvertFrom.HexstringToBytesArray(data);
-                mySerialPort.Write(bytelist.ToArray(), 0, bytelist.Count);
-            }
-            else
-            {
-                MessageBox.Show("串口未打开！");
-            }
-        }
-        private void MySerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            if (mySerialPort.IsOpen)
-            {
-                int tempdatalenth = mySerialPort.BytesToRead;
-                byte[] tempbytes = new byte[tempdatalenth];
-                mySerialPort.Read(tempbytes, 0, tempdatalenth);
-                textBox3.Invoke(new Action(() => { textBox3.Text += ConvertFrom.ToHexString(tempbytes);textBox3.Text += "\r\n"; }));
-            }
+            textBox3.Invoke(new Action(() => { textBox3.Text += obj + Environment.NewLine; }));
         }
 
         private void button5_Click(object sender, EventArgs e)
         {
             textBox3.Text = "";
         }
+
     }
 }

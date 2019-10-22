@@ -89,7 +89,7 @@
             this.label1.Size = new System.Drawing.Size(65, 12);
             this.label1.TabIndex = 2;
             this.label1.Text = "原始数据：";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
+           
             // 
             // label2
             // 
@@ -234,7 +234,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 6;
-            this.button2.Text = "Add";
+            this.button2.Text = "写入数据库";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
@@ -271,7 +271,7 @@
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 10;
-            this.button4.Text = "OpenSP";
+            this.button4.Text = "打开串口";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
