@@ -19,9 +19,7 @@ namespace XOR运算符
         SerialPort mySerialPort = new SerialPort(spCOM);
         List<string> strlist = new List<string>();
         byte[] tempbytes;
-        int t;
-        public event Action<string> showMessageEvent;
-
+        public event Action<string> showMessageEvent;//更新数据到外面UI层！
         public bool InitSP()
         {
             if (mySerialPort.IsOpen)
@@ -38,7 +36,6 @@ namespace XOR运算符
             mySerialPort.Open();
             return true;
         }
-
         public void writesp(string data)
         {
             if (mySerialPort.IsOpen)

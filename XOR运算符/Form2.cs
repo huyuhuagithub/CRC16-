@@ -128,15 +128,14 @@ namespace XOR运算符
             {
                 button4.Text = "串口已打开";
                 button4.BackColor = Color.Green;
+                skdsp.showMessageEvent += Skdsp_showMessageEvent;
             }
             else
             {
                 button4.Text = "串口已关闭";
                 button4.BackColor = Color.Red;
+                skdsp.showMessageEvent -= Skdsp_showMessageEvent;
             }
-            skdsp.showMessageEvent += Skdsp_showMessageEvent;
-            
-            
         }
 
         private void Skdsp_showMessageEvent(string obj)
